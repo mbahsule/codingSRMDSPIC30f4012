@@ -1,0 +1,81 @@
+void Timer1Int() iv IVT_ADDR_T1INTERRUPT {
+  T1IF_bit = 0;             // Clear T1IF
+//  LATE = ~ PORTE;           // Invert PORTE
+}
+unsigned int cnt;
+void INT1Interrupt() iv IVT_ADDR_INT1Interrupt  //atau void INT1Interrupt() org 0x000034
+{
+ IFS1bits.INT1IF = 0;
+    cnt++;
+    LATB4_bit=~LATB4_bit ;        //RB4 sebagai output
+}
+void INT2Interrupt() iv IVT_ADDR_INT2Interrupt  //atau void INT2Interrupt() org 0x000042
+{
+ IFS1bits.INT2IF = 0;
+   cnt=0;
+    LATB5_bit=~LATB5_bit ;        //RB5 sebagai output
+}
+void main()
+{
+ ADPCFG = 0xFFFF;       // Configure AN pins as digital I/O
+ TRISB =0x0000 ;
+ PORTB=0;
+ TRISE = 0x0000;
+  PORTE = 0;
+  TRISD = 0x0003;             // RD0 RD1 sbg INPUT  PORTD lain sbg output
+
+ //setting Interrupt INT
+INTCON1bits.NSTDIS = 1;  // Interrupt nesting is disabled
+INTCON2bits.ALTIVT = 0; // Use standard (default) vector table
+INTCON2bits.INT1EP = 0;  // Interrupt on positive edge
+IFS1bits.INT1IF = 0;  // Interrupt request has not occurred
+IEC1bits.INT1IE = 1;  // Interrupt request enabled
+IPC4bits.INT1IP = 0b011;  // Interrupt priority level = 3
+INTCON2bits.INT2EP = 0;  // Interrupt on positive edge
+IFS1bits.INT2IF = 0;  // Interrupt request has not occurred
+IEC1bits.INT2IE = 1;  // Interrupt request enabled
+IPC5bits.INT2IP = 0b010;  // Interrupt priority level = 2
+// Initialize PORTE value
+  IPC0   = IPC0 | 0x1000;   // Interrupt priority level = 1
+  T1IF_bit = 0;             // Clear T1IF
+  T1IE_bit = 1;             // Enable Timer1 interrupts
+
+  T1CON = 0x8000;           // Timer1 ON, internal clock FCY, prescaler 1:1
+  PR1 = 10000;                 //MENGATUR PERIODE TIMER
+  while (1)                 // Endless loop, interrupted by Timer1Int
+   {
+     if((cnt>=178)&&(cnt<=283)||(cnt>=491)&&(cnt<=595)||(cnt>=803)&&(cnt<=907)||(cnt>=1116)&&(cnt<=1221)
+     ||(cnt>=1428)&&(cnt<=1532)||(cnt>=1741)&&(cnt<=1845)||(cnt>=2053)&&(cnt<=2157)||(cnt>=2366)&&(cnt<=2470))
+     {
+     LATE0_bit=1;
+     LATE3_bit=1;
+     }
+     else
+     {
+     LATE0_bit=0;
+     LATE3_bit=0;
+     }
+ if((cnt<=74)||(cnt>=283)&&(cnt<=387)||(cnt>=595)&&(cnt<=700)||(cnt>=907)&&(cnt<=1011)||(cnt>=1221)&&(cnt<=1325)
+     ||(cnt>=1532)&&(cnt<=1637)||(cnt>=1845)&&(cnt<=1949)||(cnt>=2157)&&(cnt<=2261)||(cnt>=2470))
+     {
+     LATE1_bit=1;
+     LATE4_bit=1;
+     }
+     else
+     {
+     LATE1_bit=0;
+     LATE4_bit=0;
+     }
+     if((cnt>=74)&&(cnt<=178)||(cnt>=387)&&(cnt<=491)||(cnt>=700)&&(cnt<=804)||(cnt>=1011)&&(cnt<=1116)||(cnt>=1325)&&(cnt<=1429)
+     ||(cnt>=1637)&&(cnt<=1741)||(cnt>=1949)&&(cnt<=2054)||(cnt>=2261)&&(cnt<=2365))
+     {
+     LATE2_bit=1;
+     LATE5_bit=1;
+     }
+     else
+     {
+     LATE2_bit=0;
+     LATE5_bit=0;
+     }
+   }
+}
